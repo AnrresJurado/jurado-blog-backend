@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+  getHello(): any {
+    return {
+    "status" : "Online",
+    "service": "jurado api",
+    "version" : "0.0.1",
+    "date": new Date(), 
+    };
   }
 }
