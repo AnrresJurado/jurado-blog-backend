@@ -1,0 +1,44 @@
+name: 🚀 Deploy NestJS Blog Backend API to VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Copy project to VPS
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "."
+        target: "/home/andresjurado/jurado-blog-backend"
+
+    - name: Run deploy commands on VPS
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          set -e
+          cd /home/andresjurado/jurado-blog-backend
+
+          # Ponemos tu variable de entorno .env si la configuraste en GitHub Secrets
+          printf "%s" "${{ secrets.ENV_FILE }}" > .env
+
+          # Instalamos dependencias y compilamos NestJS
+          npm install
+          npm run build
+
+          # Reiniciamos PM2 con tu nombre de proceso oficial
+          pm2 delete jurado-blog-backend-api || true
+          pm2 start dist/main.js --name "jurado-blog-backend-api"
+          pm2 save
